@@ -1,6 +1,6 @@
 # SoftDesk Support - API Backend
 
-SoftDesk Support est une application B2B de gestion et de suivi des problèmes techniques au sein de projets logiciels. Ce dépôt contient l'API RESTful sécurisée qui alimente l'application, développée avec Django et Django REST Framework.
+SoftDesk Support est une application de gestion et de suivi des problèmes techniques au sein de projets logiciels. Ce dépôt contient l'API RESTful sécurisée qui alimente l'application, développée avec Django et Django REST Framework.
 
 ## 📦 Fonctionnalités principales
 
