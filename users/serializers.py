@@ -15,3 +15,8 @@ class UserSerializer(serializers.ModelSerializer):
             "can_be_contacted",
             "can_data_be_shared",
         ]
+
+    def validate_age(self, value):
+        if value <= 15:
+            raise serializers.ValidationError("L'utilisateur doit avoir plus de 15 ans.")
+        return value
