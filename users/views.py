@@ -1,7 +1,9 @@
 # from django.shortcuts import render
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions
 from django.contrib.auth import get_user_model
 from .serializers import UserSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 User = get_user_model()
 
@@ -9,3 +11,6 @@ User = get_user_model()
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = {"age": ["exact", "gt", "gte", "lt", "lte"]}

@@ -40,10 +40,12 @@ class Contributor(models.Model):
     Attributs :
         user (User) : L'utilisateur contributeur.
         project (Project) : Le projet auquel l'utilisateur contribue.
+        author (User) : L'utilisateur qui a ajouté ce contributeur (par exemple le créateur du projet).
     """
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="contributors")
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="added_contributors")
 
     class Meta:
         # Empêche qu’un même utilisateur soit ajouté deux fois à un même projet
