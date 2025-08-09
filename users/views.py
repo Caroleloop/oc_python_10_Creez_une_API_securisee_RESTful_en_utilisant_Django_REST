@@ -13,4 +13,8 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = {"age": ["exact", "gt", "gte", "lt", "lte"]}
+    filterset_fields = {
+        "age": ["exact", "gt", "gte", "lt", "lte"],
+        "can_be_contacted": ["exact"],
+        "can_data_be_shared": ["exact"],
+    }
