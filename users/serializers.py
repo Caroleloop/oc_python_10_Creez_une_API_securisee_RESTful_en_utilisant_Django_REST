@@ -3,6 +3,8 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+
     class Meta:
         model = User
         fields = [
@@ -14,7 +16,9 @@ class UserSerializer(serializers.ModelSerializer):
             "age",
             "can_be_contacted",
             "can_data_be_shared",
+            "password",
         ]
+        extra_kwargs = {"password": {"write_only": True}}
 
     def validate_age(self, value):
         if value <= 15:
