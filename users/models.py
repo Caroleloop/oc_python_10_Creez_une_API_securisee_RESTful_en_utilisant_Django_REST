@@ -20,6 +20,8 @@ class User(AbstractUser):
     can_be_contacted = models.BooleanField(default=False)  # Consentement à être contacté
     can_data_be_shared = models.BooleanField(default=False)  # Consentement au partage des données
 
+    REQUIRED_FIELDS = ["age"]
+
     def clean(self):
         """
         Valide que l'âge est strictement supérieur à 15.
