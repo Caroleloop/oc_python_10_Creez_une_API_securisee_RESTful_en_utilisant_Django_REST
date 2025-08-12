@@ -19,6 +19,7 @@ class User(AbstractUser):
     age = models.PositiveIntegerField()  # Âge de l'utilisateur (doit être > 15)
     can_be_contacted = models.BooleanField(default=False)  # Consentement à être contacté
     can_data_be_shared = models.BooleanField(default=False)  # Consentement au partage des données
+    email = models.EmailField(unique=True)
 
     REQUIRED_FIELDS = ["age"]
 
