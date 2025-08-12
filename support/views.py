@@ -24,8 +24,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             user=self.request.user, project=project, author=self.request.user  # il s’ajoute lui-même
         )
 
-    def get_queryset(self):
-        return Project.objects.filter(contributors__user=self.request.user)
+    # def get_queryset(self):
+    #     return Project.objects.filter(contributors__user=self.request.user)
 
 
 class ContributorViewSet(viewsets.ModelViewSet):
