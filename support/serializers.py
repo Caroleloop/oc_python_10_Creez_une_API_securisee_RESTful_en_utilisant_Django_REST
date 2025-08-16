@@ -14,6 +14,12 @@ class ContributorSerializer(serializers.ModelSerializer):
         model = Contributor
         fields = "__all__"
 
+    def validate(self, data):
+        # Empêcher qu'un user soit ajouté 2x au même projet
+        if Contributor.objects.filter(user=data["user"], project=data["project"]).exists():
+            raise serializers.ValidationError("Cet utilisateur est déjà contributeur de ce projet.")
+        return data
+
 
 class IssueSerializer(serializers.ModelSerializer):
     class Meta:
