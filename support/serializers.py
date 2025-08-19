@@ -13,6 +13,7 @@ class ContributorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contributor
         fields = "__all__"
+        extra_kwargs = {"author": {"read_only": True}}  # prevent clients from sending this
 
     def validate(self, data):
         # Empêcher qu'un user soit ajouté 2x au même projet
