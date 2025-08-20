@@ -26,8 +26,6 @@ class IsContributorOrAuthor(permissions.BasePermission):
             if not project_id:
                 return False
 
-            from .models import Project, Issue, Contributor
-
             # Si c’est un commentaire, récupérer le projet via l’issue
             if view.basename == "comment":
                 try:
@@ -59,9 +57,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project = serializer.save(author=self.request.user)
 
         # Ajoute automatiquement l'auteur comme contributeur
-        Contributor.objects.create(
-            user=self.request.user, project=project, author=self.request.user  # il s’ajoute lui-même
-        )
+        Contributor.objects.create(user=self.request.user, project=project)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -116,7 +112,7 @@ class ContributorViewSet(viewsets.ModelViewSet):
             raise ValidationError("This user is already a contributor to the project.")
 
         # Save with enforced project and user
-        serializer.save(project=project, user=user, author=project.author)
+        serializer.save(project=project, user=user)
 
     def perform_destroy(self, instance):
         # Empêcher de supprimer l’auteur du projet
@@ -152,7 +148,26 @@ class IssueViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
+        project = serializer.validated_data["project"]
+        assignee = serializer.validated_data["assignee"]
+
+        # Vérifie que l'assignee appartient au projet
+        is_contributor = Contributor.objects.filter(project=project, user=assignee).exists()
+        if not (project.author == assignee or is_contributor):
+            raise ValidationError("L'assignee doit être auteur ou contributeur du projet.")
+
         serializer.save(author=self.request.user)
+
+    def perform_update(self, serializer):
+        project = serializer.validated_data.get("project", serializer.instance.project)
+        assignee = serializer.validated_data.get("assignee", serializer.instance.assignee)
+
+        # Vérifie que l'assignee appartient au projet
+        is_contributor = Contributor.objects.filter(project=project, user=assignee).exists()
+        if not (project.author == assignee or is_contributor):
+            raise ValidationError("L'assignee doit être auteur ou contributeur du projet.")
+
+        serializer.save()
 
 
 class CommentViewSet(viewsets.ModelViewSet):
