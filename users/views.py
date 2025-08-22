@@ -55,3 +55,8 @@ class UserViewSet(viewsets.ModelViewSet):
         "can_be_contacted": ["exact"],  # filtrage booléen (True/False)
         "can_data_be_shared": ["exact"],  # filtrage booléen (True/False)
     }
+
+    def get_queryset(self):
+        return User.objects.all().prefetch_related(
+            "authored_projects", "assigned_issues", "authored_issues", "comments"
+        )

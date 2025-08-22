@@ -90,7 +90,18 @@ class ProjectViewSet(viewsets.ModelViewSet):
         - Filtrage par type si fourni (?type=)
         - Tri par titre
         """
-        queryset = super().get_queryset()
+        queryset = (
+            Project.objects.all()
+            .select_related("author")  # l'auteur est une FK
+            .prefetch_related(
+                "contributors__user",  # les contributeurs + user liés
+                "issues__author",  # auteur des issues
+                "issues__assignee",  # assigné des issues
+                "issues__comments__author",  # auteur des commentaires
+            )
+            .only("id", "title", "type", "author", "created_time")  # récupère juste l'essentiel
+            .defer("description")  # description volumineuse, chargée à la demande
+        )
         project_type = self.request.query_params.get("type")
         if project_type:
             queryset = queryset.filter(type=project_type)
@@ -122,7 +133,7 @@ class ContributorViewSet(viewsets.ModelViewSet):
         """
         Filtrer les contributeurs d’un projet si ?project=<id> est fourni.
         """
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related("user", "project").only("id", "user_id", "project_id")
         project_id = self.request.query_params.get("project")
         if project_id is not None:
             queryset = queryset.filter(project_id=project_id)
@@ -194,7 +205,14 @@ class IssueViewSet(viewsets.ModelViewSet):
         - ?assignee=<id>
         - ?priority=<valeur>
         """
-        queryset = super().get_queryset()
+        queryset = (
+            super()
+            .get_queryset()
+            .select_related("project", "author", "assignee")
+            .prefetch_related("comments__author")
+            .only("id", "title", "tag", "priority", "status", "project", "author", "assignee", "created_time")
+            .defer("description")
+        )
         project_id = self.request.query_params.get("project")
         tag = self.request.query_params.get("tag")
         status = self.request.query_params.get("status")
@@ -260,7 +278,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         Filtrer les commentaires d’une issue si ?issue=<id> est fourni.
         Trie les résultats par date de création.
         """
-        queryset = super().get_queryset()
+        queryset = (
+            super()
+            .get_queryset()
+            .select_related("issue", "author")
+            .only("id", "description", "issue_id", "author_id", "created_time")
+        )
         issue_id = self.request.query_params.get("issue")
         if issue_id:
             queryset = queryset.filter(issue_id=issue_id)
