@@ -109,6 +109,19 @@ class ProjectSerializer(serializers.ModelSerializer):
         read_only_fields = ["author", "created_time"]
 
 
+class ProjectListSerializer(serializers.ModelSerializer):
+    """
+    Serializer allégé pour la liste des projets.
+    N'affiche que les infos essentielles (pas de description ni détails).
+    """
+
+    author = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Project
+        fields = ["id", "title", "type", "author", "created_time"]
+
+
 # --- Serializer détaillé pour affichage projet ---
 class ProjectDetailSerializer(serializers.ModelSerializer):
     """

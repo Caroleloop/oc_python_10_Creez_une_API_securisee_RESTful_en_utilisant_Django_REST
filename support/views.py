@@ -6,6 +6,7 @@ from .serializers import (
     IssueSerializer,
     CommentSerializer,
     ProjectDetailSerializer,
+    ProjectListSerializer,
 )
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from users.models import User
@@ -112,7 +113,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         Utiliser un serializer détaillé pour la liste et la consultation,
         sinon le serializer de base pour création/modification.
         """
-        if self.action in ["retrieve", "list"]:
+        if self.action == "list":
+            return ProjectListSerializer
+        elif self.action == "retrieve":
             return ProjectDetailSerializer
         return ProjectSerializer
 
