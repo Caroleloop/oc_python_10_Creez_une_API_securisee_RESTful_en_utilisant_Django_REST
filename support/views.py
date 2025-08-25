@@ -7,6 +7,8 @@ from .serializers import (
     CommentSerializer,
     ProjectDetailSerializer,
     ProjectListSerializer,
+    IssueListSerializer,
+    IssueDetailSerializer,
 )
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from users.models import User
@@ -263,6 +265,13 @@ class IssueViewSet(viewsets.ModelViewSet):
             raise ValidationError("L'assignee doit être auteur ou contributeur du projet.")
 
         serializer.save()
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return IssueListSerializer
+        elif self.action == "retrieve":
+            return IssueDetailSerializer
+        return IssueSerializer
 
 
 class CommentViewSet(viewsets.ModelViewSet):

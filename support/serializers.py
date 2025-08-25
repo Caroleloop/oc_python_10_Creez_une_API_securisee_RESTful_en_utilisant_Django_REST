@@ -193,6 +193,46 @@ class IssueSerializer(serializers.ModelSerializer):
         read_only_fields = ["author", "created_time"]
 
 
+class IssueDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer détaillé pour une issue (utilisé dans /issues/<id>/).
+    Inclut les commentaires imbriqués + infos auteur/assignee.
+    """
+
+    author = UserSerializer(read_only=True)
+    assignee = UserSerializer(read_only=True)
+    comments = CommentNestedSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Issue
+        fields = [
+            "id",
+            "title",
+            "description",
+            "tag",
+            "priority",
+            "status",
+            "author",
+            "assignee",
+            "created_time",
+            "comments",
+        ]
+
+
+class IssueListSerializer(serializers.ModelSerializer):
+    """
+    Serializer allégé pour la liste des issues.
+    N'affiche que les infos essentielles (pas de description ni commentaires).
+    """
+
+    author = UserSerializer(read_only=True)
+    assignee = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Issue
+        fields = ["id", "title", "tag", "priority", "status", "author", "assignee", "created_time"]
+
+
 # --- Serializer commentaires standard (API /comments/) ---
 class CommentSerializer(serializers.ModelSerializer):
     """
