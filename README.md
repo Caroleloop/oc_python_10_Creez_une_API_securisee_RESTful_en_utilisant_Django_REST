@@ -46,3 +46,51 @@ SoftDesk Support est une application de gestion et de suivi des problèmes techn
 - Utilisation de la pagination sur toutes les ressources listées
 - Code structuré pour limiter la charge serveur
 - Optimisation des requêtes et dépendances (Pipenv ou Poetry recommandé)
+
+
+## ⚙️ Installation avec Pipenv
+
+1. Cloner le dépôt :
+```bash
+git clone https://github.com/<votre-repo>/softdesk-backend.git
+cd softdesk-backend
+```
+
+2. Installer les dépendances et créer l’environnement virtuel :
+```bash
+pipenv install --dev
+```
+
+3. Activer l’environnement virtuel :
+```bash
+pipenv shell
+```
+
+4. Appliquer les migrations et lancer le serveur :
+```bash
+python manage.py migrate
+python manage.py runserver
+```
+
+
+## 🚀 Usage
+
+- Authentification via JWT (`/api/token/` et `/api/token/refresh/`)  
+- Accès aux projets, issues et commentaires via les endpoints REST :
+  - `/projects/`
+  - `/issues/`
+  - `/comments/`
+  - `/contributors/`  
+- Seuls les **contributeurs** peuvent consulter ou modifier un projet et ses issues/comments.
+
+
+## 📝 Notes
+
+- Recommandé : Python 3.11+, Django 4.x  
+- API sécurisée et conforme aux bonnes pratiques REST  
+- Pagination et filtres disponibles sur tous les endpoints de liste
+
+
+## Auteurs
+
+- **Carole Roch** _alias_ [@Caroleloop](https://github.com/Caroleloop)
