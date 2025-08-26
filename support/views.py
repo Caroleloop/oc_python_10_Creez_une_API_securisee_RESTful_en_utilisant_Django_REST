@@ -30,40 +30,59 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
 
 class IsContributorOrAuthor(permissions.BasePermission):
     """
-    Permission pour vérifier si l'utilisateur est l'auteur du projet
-    ou un contributeur de ce projet.
-    Utilisée notamment lors de la création d'issues ou de commentaires.
+    Permission qui autorise uniquement l'auteur ou les contributeurs
+    à accéder aux projets, issues et commentaires liés.
     """
 
     def has_permission(self, request, view):
-        # Appliquer la logique uniquement lors d'une création (POST)
-        if request.method == "POST":
-            # Récupérer l'identifiant du projet ou de l'issue
-            project_id = request.data.get("project") or request.data.get("issue")
+        project = None
 
-            if not project_id:
-                return False
-
-            # Si l'objet est un commentaire → récupérer le projet via l'issue
-            if view.basename == "comment":
+        # Pour les commentaires → on récupère le projet via l'issue
+        if view.basename == "comment":
+            issue_id = request.data.get("issue") or request.query_params.get("issue")
+            if issue_id:
                 try:
-                    issue = Issue.objects.get(id=project_id)
+                    issue = Issue.objects.get(id=issue_id)
                     project = issue.project
                 except Issue.DoesNotExist:
                     return False
-            else:
+
+        # Pour les issues → on récupère le projet directement
+        elif view.basename == "issue":
+            project_id = request.data.get("project") or request.query_params.get("project")
+            if project_id:
                 try:
                     project = Project.objects.get(id=project_id)
                 except Project.DoesNotExist:
                     return False
 
-            # Vérifie si l'utilisateur est l'auteur ou un contributeur
+        # Pour les projets → on vérifie directement l'objet (dans has_object_permission)
+        if project:
             return (
                 project.author == request.user
                 or Contributor.objects.filter(project=project, user=request.user).exists()
             )
-        # Pour les autres méthodes (GET, etc.), autoriser
+
+        # Si pas d'info sur projet, on laisse DRF gérer (ex: /projects/ sans paramètre)
         return True
+
+    def has_object_permission(self, request, view, obj):
+        """
+        Vérifie que l'utilisateur est bien auteur ou contributeur
+        de l'objet qu'il essaie de consulter ou modifier.
+        """
+        if isinstance(obj, Project):
+            project = obj
+        elif isinstance(obj, Issue):
+            project = obj.project
+        elif isinstance(obj, Comment):
+            project = obj.issue.project
+        else:
+            return False
+
+        return (
+            project.author == request.user or Contributor.objects.filter(project=project, user=request.user).exists()
+        )
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -76,7 +95,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsContributorOrAuthor]
 
     def perform_create(self, serializer):
         """
@@ -93,21 +112,26 @@ class ProjectViewSet(viewsets.ModelViewSet):
         - Filtrage par type si fourni (?type=)
         - Tri par titre
         """
+        user = self.request.user
+        queryset = Project.objects.filter(author=user) | Project.objects.filter(contributors__user=user)
+
         queryset = (
-            Project.objects.all()
-            .select_related("author")  # l'auteur est une FK
+            queryset.distinct()
+            .select_related("author")
             .prefetch_related(
                 "contributors__user",  # les contributeurs + user liés
                 "issues__author",  # auteur des issues
                 "issues__assignee",  # assigné des issues
                 "issues__comments__author",  # auteur des commentaires
             )
-            .only("id", "title", "type", "author", "created_time")  # récupère juste l'essentiel
-            .defer("description")  # description volumineuse, chargée à la demande
+            .only("id", "title", "type", "author", "created_time")
+            .defer("description")
         )
+
         project_type = self.request.query_params.get("type")
         if project_type:
             queryset = queryset.filter(type=project_type)
+
         return queryset.order_by("title")
 
     def get_serializer_class(self):
@@ -132,7 +156,7 @@ class ContributorViewSet(viewsets.ModelViewSet):
 
     queryset = Contributor.objects.all()
     serializer_class = ContributorSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsContributorOrAuthor]
 
     def get_queryset(self):
         """
